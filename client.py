@@ -54,8 +54,8 @@ def start_benchmark(data):
     ffmpeg_command = [
         'ffmpeg',
         '-i', file_url,
-        *params.split(),
-        '-t', '10',  # Setze die Dauer auf 10 Sekunden
+        #*params.split(),
+        *params,
         '-f', 'null',  # Keine Ausgabedatei, benutze null als Format
         '/dev/null'  # Für Unix, für Windows benutze 'NUL'
     ]
@@ -96,23 +96,31 @@ def start_benchmark(data):
 
 @sio.event
 def adjust_segment(data):
-    start_time = data['start_time']
-    end_time = data['end_time']
     file_url = f"http://{args.server_ip}:{args.server_port}{data['file_url']}"
     params = data['params']
-    segment_duration = end_time - start_time
+    #segment_duration = end_time - start_time
 
-    print(f"Adjust segment: Start at {start_time} seconds, End at {end_time}, duration {segment_duration} seconds.")
+    #print(f"Adjust segment: Start at {start_time} seconds, End at {end_time}, duration {segment_duration} seconds.")
 
     output_file = 'segment_output.mp4'
+
+    # Prüfen, ob die Ausgabedatei bereits existiert
+    if os.path.exists(output_file):
+        # Benutzer fragen, ob die Datei gelöscht werden soll
+        user_response = input(f"{output_file} existiert bereits. Möchten Sie die Datei löschen? (j/n): ")
+        if user_response.lower() == 'j':
+            os.remove(output_file)
+            print(f"{output_file} wurde gelöscht.")
+        else:
+            print(f"{output_file} wurde nicht gelöscht. Abbruch.")
+            return  # Abbrechen, wenn der Benutzer nicht löschen möchte
 
     # Erstelle den FFmpeg-Befehl mit spezifischem Start und Segmentdauer
     ffmpeg_command = [
         'ffmpeg',
-        '-ss', str(start_time),  # Startzeit
-        '-to', str(end_time),
         '-i', file_url,
-        *params.split(),
+        #*params.split(),
+        *params,
         output_file
     ]
 
