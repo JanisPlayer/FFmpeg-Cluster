@@ -121,7 +121,7 @@ def serve_file(filename):
     file_path = os.path.join('.', FILE_NAME)
     if not os.path.isfile(file_path):
         abort(404)
-    return send_from_directory('.', filename)
+    return send_from_directory('.', FILE_NAME)
 
 @socketio.on('connect')
 def handle_connect():
@@ -288,7 +288,7 @@ def combine_segments(segment_files):
     if EXACTLY:
         ffmpeg_command = [
             'ffmpeg',
-            '-i', 'input.mp4',  # Audio von input.mp4 nutzen
+            '-i', FILE_NAME,  # Audio von input.mp4 nutzen
             '-f', 'concat',
             '-safe', '0',
             '-i', 'filelist.txt',  # Segmente kombinieren
