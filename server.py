@@ -149,7 +149,8 @@ def handle_fps(data):
 
     # Wenn alle FPS empfangen sind, vergleichen und Segmente berechnen
     if len(client_fps) == len(clients):
-        adjust_segments()
+        video_fps, video_duration, total_frames = get_video_info(FILE_NAME, EXACTLY)
+        adjust_segments(video_fps, video_duration, total_frames)
 
 @socketio.on('finish')
 def handle_client_finish(data):
@@ -211,7 +212,7 @@ def wait_for_video_info():
         print("Warte auf Videoinformationen...")
         time.sleep(1)  # Warte 1 Sekunde, bevor die Prüfung erneut erfolgt
 
-def adjust_segments():
+def adjust_segments(video_fps, video_duration, total_frames):
     """
     Adjust encoding segments based on the FPS results of each client.
     """
@@ -221,7 +222,7 @@ def adjust_segments():
     #wait_for_video_info()
 
     # Holen der FPS und Videodauer
-    video_fps, video_duration, total_frames = get_video_info(FILE_NAME, EXACTLY)
+    #video_fps, video_duration, total_frames = get_video_info(FILE_NAME, EXACTLY)
     
     fps_values = list(client_fps.values())
     total_fps_capacity = np.sum(fps_values)
