@@ -31,6 +31,14 @@ The encoding efficiency compared to encoding on a single machine may vary depend
 
 A live-streaming feature is still in development, so these parameters are currently not usable.
 
+**Known Issues:**
+The server may freeze, or clients might lose connection. If the host running the server becomes overloaded, it can also lead to freezing, which results in corrupted data being sent or received. This issue may be related to threading problems, and a potential fix could be running the server in a mode that handles threads more effectively. These issues tend to occur more frequently with longer videos and encoding times.
+
+A reconnect solution needs to be implemented, where the client informs the server about its identity and then returns to the last processing step. Faulty steps should be detected and retried.
+
+Videos with a high number of frames can take a long time to process with FFprobe. One way to improve this for videos without a variable framerate is to set the `--exactly` parameter to `False`. This will estimate the frame count based on time and FPS data. To make this estimation more accurate, a check could be performed to see where the next frame appears or if the end of the video matches the estimated frame count. Alternatively, at the very end of the video, time instead of frame count could be used to pass data to the client, preventing duplicate frames. Currently, frame estimates are passed in frame counts rather than time intervals, which is why the audio parameter has no effect at the moment.
+
+
 ### Server Options:
 ```bash
 options:
@@ -110,6 +118,13 @@ Sind alle Clients verbunden, wird ein Benchmark auf allen Clients gestartet. Dan
 Der Unterschied in der Kodierungseffizienz auf einem einzelnen Rechner kann je nach Anzahl der zu kombinierenden Segmente variieren, da die B-Frames beim Kopieren auch von anderen Segmenten übernommen werden. Die Effizienz war jedoch für mich zufriedenstellend, insbesondere da so viel Zeit gespart werden kann. Es wäre sogar möglich, auf einem Smartphone mit Userland oder Termux FFmpeg zu installieren und dieses für die Berechnung zu nutzen.
 
 Eine Livestream-Funktion ist noch in Planung, daher sind diese Parameter derzeit nicht nutzbar.
+
+**Bekannte Probleme:**
+Es kann vorkommen, dass der Server einfriert oder Clients die Verbindung verlieren. Wenn der Host, auf dem der Server läuft, stark belastet wird, kann dies ebenfalls zu einem Einfrieren führen. Das hat zur Folge, dass Daten fehlerhaft gesendet oder empfangen werden. Dieses Problem könnte auch durch Thread-Management-Fehler verursacht werden. Eine mögliche Lösung wäre es, den Server in einem Modus zu starten, der besser mit Threads umgehen kann. Diese Probleme treten häufiger auf, je länger das Video ist und je länger der Encoding-Prozess dauert.
+
+Es muss noch eine Reconnect-Lösung entwickelt werden, bei der der Client dem Server mitteilt, wer er ist, und dann an den letzten Verarbeitungsschritt zurückkehrt. Fehlerhafte Schritte sollten erkannt und wiederholt werden.
+
+Videos mit vielen Frames können bei der Nutzung von FFprobe zu längeren Verarbeitungszeiten führen. Eine Möglichkeit, dies zu beschleunigen, besteht darin, bei Videos ohne variable Framerate den Parameter `--exactly` auf `False` zu setzen. Dadurch wird die Anzahl der Frames anhand der Zeit und der FPS-Daten geschätzt. Um diese Schätzung zu präzisieren, könnte man prüfen, an welcher Stelle das nächste Frame erscheint oder ob das Ende des Videos mit der geschätzten Framezahl übereinstimmt. Alternativ könnte am Ende des Videos die Zeit statt der Framezahl verwendet werden, um dies an den Client zu übermitteln und doppelte Frames zu vermeiden. Derzeit wird die Schätzung in Frames und nicht in Zeitabständen vorgenommen, weshalb der Audio-Parameter keinen Einfluss hat.
 
 ### Server-Optionen:
 ```bash
