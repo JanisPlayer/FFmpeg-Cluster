@@ -5,6 +5,8 @@ import os
 import eventlet
 import numpy as np
 import subprocess
+import math
+import threading
 
 # Erstelle die Flask-App und die SocketIO-Instanz
 #app = Flask(__name__)
@@ -141,6 +143,7 @@ def handle_disconnect():
 
 @socketio.on('send_fps')
 def handle_fps(data):
+    global video_fps, video_duration, total_frames
     """Handle FPS results sent by clients."""
     client_id = request.sid
     fps = data['fps']
@@ -149,7 +152,13 @@ def handle_fps(data):
 
     # Wenn alle FPS empfangen sind, vergleichen und Segmente berechnen
     if len(client_fps) == len(clients):
-        video_fps, video_duration, total_frames = get_video_info(FILE_NAME, EXACTLY)
+        #video_fps, video_duration, total_frames = get_video_info(FILE_NAME, EXACTLY)
+
+        # Starte den asynchronen Aufruf von ffprobe
+        async_ffprobe(FILE_NAME, EXACTLY)
+
+        # Warte auf Videoinformationen, bevor die Segmente angepasst werden
+        wait_for_video_info()
         adjust_segments(video_fps, video_duration, total_frames)
 
 @socketio.on('finish')
@@ -163,6 +172,16 @@ def handle_client_finish(data):
     # Wenn alle FPS empfangen sind, vergleichen und Segmente berechnen
     if len(client_fps) == len(clients):
         print(f"{client_id} finish")
+
+def async_ffprobe(video_file, exactly=False):
+    """Asynchroner Aufruf von ffprobe."""
+    def run_ffprobe():
+        global video_fps, video_duration, total_frames
+        video_fps, video_duration, total_frames = get_video_info(video_file, exactly)
+    
+    # Starte ffprobe in einem neuen Thread
+    #eventlet.spawn_n(run_ffprobe) //eventlet.monkey_patch()
+    threading.Thread(target=run_ffprobe).start()
 
 def get_video_info(video_file, exactly=False):
     """ Use ffprobe to extract video duration, FPS, and total frame count. If exactly is True, return the exact frame count. """
@@ -208,9 +227,10 @@ def get_video_info(video_file, exactly=False):
 def wait_for_video_info():
     """Warte, bis die globalen Variablen einen Wert haben."""
     global video_fps, video_duration, total_frames
+    print("Warte auf Videoinformationen...", end='', flush=True)
     while video_fps is None or video_duration is None or total_frames is None:
-        print("Warte auf Videoinformationen...")
-        time.sleep(1)  # Warte 1 Sekunde, bevor die Prüfung erneut erfolgt
+        print(".", end='', flush=True)
+        eventlet.sleep(1) # Warte 1 Sekunde, bevor die Prüfung erneut erfolgt
 
 def adjust_segments(video_fps, video_duration, total_frames):
     """
@@ -253,7 +273,7 @@ def adjust_segments(video_fps, video_duration, total_frames):
 
         start_time = current_time  # Startzeitpunkt des aktuellen Clients
         end_time = current_time + client_duration  # Endzeitpunkt des aktuellen Clients
-        current_time = end_time  # Update des Startzeitpunkts für den nächsten Client
+        current_time = end_time + (1 / video_fps) # Update des Startzeitpunkts für den nächsten Client
         
         start_frame = current_frame  # Startframe des aktuellen Clients
         end_frame = current_frame + client_frame_share  # Endframe des aktuellen Clients
@@ -275,7 +295,12 @@ def adjust_segments(video_fps, video_duration, total_frames):
             ]
             socketio.emit('adjust_segment', {'file_url': file_url, 'params': params}, to=client)
         else:
-            params = FFMPEG_PARAMS + ['-ss', 'start_time','-to', 'end_time']
+            params = FFMPEG_PARAMS + [
+                '-vf', fr"select=between(n\,{start_frame}\,{end_frame})",
+                '-vsync', 'vfr',
+                '-an'
+            ]
+            #params = FFMPEG_PARAMS + ['-ss', start_time,'-to', end_time]
             socketio.emit('adjust_segment', {'file_url': file_url, 'params': params}, to=client)
 
 def combine_segments(segment_files):
@@ -286,7 +311,8 @@ def combine_segments(segment_files):
             f.write(f"file '{segment}'\n")
 
     # Führe den FFmpeg-Befehl aus, um die Segmente zu kombinieren
-    if EXACTLY:
+    #if EXACTLY:
+    if True:
         ffmpeg_command = [
             'ffmpeg',
             '-i', FILE_NAME,  # Audio von input.mp4 nutzen
