@@ -87,6 +87,59 @@ options:
 
 ---
 
+### TODO and Ideas:
+
+- **Make audio parameters applicable:**
+  Audio parameters should be applied on the server by converting the audio from the original file. Alternatively, audio encoding could be handled separately on the clients. However, since audio encoding is fast on a PC, this might not be urgent or even necessary.
+
+- **FFmpeg parameter overwrite (ffmpeg_params_overwrite):**
+  Allows the client to use hardware encoders.
+
+- **Parameter for the key and associated system:**
+  Introduce a system for clients and servers based on a parameter to enhance security.
+
+- **Parameter to override benchmark frames:**
+  A parameter to allow overriding the number of benchmark frames for the client.
+
+- **File access:**
+  Allow the client to also use files from other folders.
+
+- **Installer and Docker support:**
+  Provide an installer and a Docker environment.
+
+- **Experimental `segment_request` function:**
+  This function aims to improve speed through better parallelization at the cost of efficiency by dividing the video into more segments. If a client finishes its segment earlier than expected, it will be assigned a new segment. The idea is to continuously assign clients new parts of the video that haven't been encoded yet. This improves load distribution and could also be useful for streaming.
+
+  **Technical Explanation:**
+  After benchmarking (or without benchmarking), each client is assigned a part of the video. Once a client has encoded its segment, a global variable protected by thread locks is used to determine which frame the video was last processed. The number of frames remaining until the end of the video is checked:
+
+  - If fewer than 10 seconds (in frames) remain, the current client receives all remaining frames.
+  - Otherwise, it receives only its assigned or benchmark-determined portion.
+
+  This approach generates more unnecessary B-frames but allows better load balancing, even when encoding effort varies between segments. This is currently just an idea that could be implemented and tested soon.
+
+- **Divide the video into 10-second segments:**
+  Benchmarking determines how many frames of a segment each client takes.
+
+```bash
+python3 server.py --required_clients 2 --file_name input.mp4 --segment_request --segment_time 10 --ffmpeg_params "-c:v libsvtav1 -preset 6 -crf 30"
+```
+
+- **Minimal segment time of 10 seconds with benchmarking:**
+  Using negative values for `segment_time` ensures the weakest client is used as the baseline.
+
+```bash
+python3 server.py --required_clients 2 --file_name input.mp4 --segment_request --segment_time -10 --ffmpeg_params "-c:v libsvtav1 -preset 6 -crf 30"
+```
+
+- **10-second segments without benchmarking:**
+
+```bash
+python3 server.py --required_clients 2 --file_name input.mp4 --segment_request --segment_time 10 --benchmark_seconds 0 --ffmpeg_params "-c:v libsvtav1 -preset 6 -crf 30"
+```
+
+---
+
 ### Deutsche Version:
 
 # FFmpeg-Cluster
@@ -172,4 +225,55 @@ options:
                         IP-Adresse des SocketIO-Servers (Standard: localhost).
   --server_port SERVER_PORT
                         Port des SocketIO-Servers (Standard: 5000).
+```
+
+### TODO und Ideen:
+
+- **Audio-Parameter anwendbar machen:**
+  Audio-Parameter sollen beim Server angewendet werden, indem die Audiodatei von der Originaldatei konvertiert wird. Alternativ könnte die Audioencodierung auch separat auf den Clients erfolgen. Da das Encodieren von Audio auf einem PC jedoch schnell geht, ist dies weniger dringend und möglicherweise unnötig.
+
+- **FFmpeg-Parameter-Überschreibung (ffmpeg_params_overwrite):**
+  Ermöglicht es, dass der Client Hardware-Encoder nutzen kann.
+
+- **Parameter für den Key und das zugehörige System:**
+  Einführung eines Systems für Client und Server, das auf einem Parameter basiert, um die Sicherheit zu verbessern.
+
+- **Parameter für Benchmark-Frames:**
+  Ein Parameter, der es erlaubt, die Anzahl der Benchmark-Frames des Clients zu überschreiben.
+
+- **Dateizugriff:**
+  Dem Client ermöglichen, auch Dateien aus anderen Ordnern zu nutzen.
+
+- **Installer und Docker-Support:**
+  Bereitstellung eines Installers und einer Docker-Umgebung.
+
+- **Experimentelle `segment_request`-Funktion:**
+  Diese Funktion soll die Geschwindigkeit durch bessere Parallelisierung auf Kosten der Effizienz beschleunigen. Dabei wird das Video in mehr Segmente unterteilt, sodass ein Client, der früher als geplant mit seinem Segment fertig wird, ein neues Segment zugewiesen bekommt. Die Idee besteht darin, Clients kontinuierlich neue Abschnitte des Videos zuzuweisen, die noch nicht encodiert wurden. Dies verbessert die Lastverteilung und könnte auch für Streaming nützlich sein.
+
+  **Technische Erläuterung:**
+  Nach dem Benchmark (oder ohne Benchmark) wird jedem Client ein Teil des Videos gesendet. Sobald ein Client sein Segment encodiert hat, wird aus einer globalen Variable, die mit Thread-Locks geschützt ist, abgerufen, bis zu welchem Frame das Video zuletzt verarbeitet wurde. Es wird geprüft, wie viele Frames bis zum Ende des Videos übrig sind:
+
+  - Sind es weniger als 10 Sekunden (in Frames), erhält der aktuelle Client alle verbleibenden Frames.
+  - Andernfalls erhält er nur den ihm zugewiesenen oder durch den Benchmark ermittelten Anteil.
+
+  Diese Methode erzeugt zwar mehr unnötige B-Frames, erlaubt es aber, die Last bei unterschiedlichem Encodierungsaufwand pro Segment besser zu verteilen. Dies ist aktuell nur eine Idee, die in naher Zukunft umgesetzt und getestet werden könnte.
+
+- **Aufteilung in 10-Sekunden-Segmente:**
+  Das Benchmark entscheidet, welcher Client wie viele Frames eines Segments übernimmt.
+
+```bash
+python3 server.py --required_clients 2 --file_name input.mp4 --segment_request --segment_time 10 --ffmpeg_params "-c:v libsvtav1 -preset 6 -crf 30"
+```
+
+- **Minimale Segmentzeit von 10 Sekunden mit Benchmark:**
+  Bei Verwendung negativer Werte für `segment_time` sorgt das Benchmark dafür, dass der schwächste Client als Basis genutzt wird.
+
+```bash
+python3 server.py --required_clients 2 --file_name input.mp4 --segment_request --segment_time -10 --ffmpeg_params "-c:v libsvtav1 -preset 6 -crf 30"
+```
+
+- **10-Sekunden-Segmente ohne Benchmark:**
+
+```bash
+python3 server.py --required_clients 2 --file_name input.mp4 --segment_request --segment_time 10 --benchmark_seconds 0 --ffmpeg_params "-c:v libsvtav1 -preset 6 -crf 30"
 ```
