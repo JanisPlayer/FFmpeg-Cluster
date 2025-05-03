@@ -70,7 +70,7 @@ def start_benchmark(data):
 
         # Analysiere die FFmpeg-Ausgabe nach FPS und Speed
         fps_match = re.search(r'(\d+(?:\.\d+)?) fps', output)  # Regex für FPS
-        speed_match = re.findall(r'speed=(\d+(?:\.\d+)?)x', output)  # Alle Vorkommen von Speed
+        speed_match = re.findall(r'speed=\s*(\d+(?:\.\d+)?)x', output)  # Alle Vorkommen von Speed
         
         if fps_match and speed_match:
             fps = float(fps_match.group(1))
@@ -134,7 +134,7 @@ def adjust_segment(data):
 
         # FPS und Speed extrahieren und an den Server senden (wie zuvor)
         fps_match = re.search(r'(\d+(?:\.\d+)?) fps', output)
-        speed_match = re.findall(r'speed=(\d+(?:\.\d+)?)x', output)
+        speed_match = re.findall(r'speed=\s*(\d+(?:\.\d+)?)x', output)
         
         if fps_match and speed_match:
             fps = float(fps_match.group(1))

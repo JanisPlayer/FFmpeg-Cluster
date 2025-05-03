@@ -9,11 +9,22 @@ Start the server and specify the number of clients with `--required_clients` tha
 
 ### Requirements:
 - [FFmpeg](https://github.com/btbn/ffmpeg-builds/releases)
+- requests
 - Flask
 - Flask-SocketIO
 - eventlet
 - numpy
 - [requirements.txt](https://raw.githubusercontent.com/JanisPlayer/FFmpeg-Cluster/refs/heads/main/requirements.txt)
+
+### Setup:
+```bash
+git clone https://github.com/JanisPlayer/FFmpeg-Cluster.git
+cd FFmpeg-Cluster
+sudo apt install python3 python3-pip python3.12-venv ffmpeg -y
+python3 -m venv ./FFmpeg-Cluster-venv
+source FFmpeg-Cluster-venv/bin/activate
+pip install -r requirements.txt
+```
 
 ```bash
 python3 server.py --required_clients 2 --file_name input.mp4 --ffmpeg_params "-c:v libsvtav1 -preset 6 -crf 30"
@@ -156,6 +167,17 @@ Starte den Server und wähle mit `--required_clients` aus, wie viele Clients an 
 - eventlet
 - numpy
 - [requirements.txt](https://raw.githubusercontent.com/JanisPlayer/FFmpeg-Cluster/refs/heads/main/requirements.txt)
+- requests
+
+### Installation:
+```bash
+git clone https://github.com/JanisPlayer/FFmpeg-Cluster.git
+cd FFmpeg-Cluster
+sudo apt install python3 python3-pip python3.12-venv ffmpeg -y
+python3 -m venv ./FFmpeg-Cluster-venv
+source FFmpeg-Cluster-venv/bin/activate
+pip install -r requirements.txt
+```
 
 ```bash
 python3 server.py --required_clients 2 --file_name input.mp4 --ffmpeg_params "-c:v libsvtav1 -preset 6 -crf 30"
