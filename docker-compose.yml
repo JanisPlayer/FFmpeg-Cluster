@@ -1,0 +1,30 @@
+services:
+  server:
+    build: .
+    container_name: ffmpeg-cluster-server
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./:/app/data
+    working_dir: /app/data
+    command: >
+      /app/server.py
+      --required_clients ${REQUIRED_CLIENTS:-2}
+      --file_name ${FILE_NAME:-input.mp4}
+      --file_name_output ${FILE_NAME_OUTPUT:-output.mp4}
+      --ffmpeg_params "${FFMPEG_PARAMS:--c:v libx264 -preset fast}"
+      --segment_request ${SEGMENT_REQUEST:-True}
+      --segment_time ${SEGMENT_TIME:-10}
+      --key "${CLUSTER_KEY:-}"
+
+  client:
+    build: .
+    depends_on:
+      - server
+    deploy:
+      replicas: ${REQUIRED_CLIENTS:-2}
+    command: >
+      /app/client.py
+      --server_ip server
+      --server_port 5000
+      --key "${CLUSTER_KEY:-}"

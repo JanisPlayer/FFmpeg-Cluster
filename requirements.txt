@@ -1,5 +1,6 @@
 requests
 Flask
 Flask-SocketIO
-eventlet
+python-socketio[client]
+websocket-client
 numpy

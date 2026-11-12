@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+*$py.class
+FFmpeg-Cluster-venv/
+.venv/
+venv/
+uploads/
+stream/
+filelist.txt
+segment_output*.mp4
